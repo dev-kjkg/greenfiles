@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="htmlos:handles" content="text/*,image/*,application/json,.md,.txt,.json">
+<title>HTMLOS API Tester</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#eceff1;color:#212121;overflow:hidden}
+body{display:flex;flex-direction:column}
+#bar{height:48px;background:#00796b;color:#fff;display:flex;align-items:center;padding:0 16px;gap:12px;box-shadow:0 2px 4px rgba(0,0,0,.3);flex-shrink:0;font-size:18px;font-weight:500}
+#bar span.t{flex:1}#badge{font-size:12px;font-weight:500;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:12px}#badge.root{background:#1fa88b}
+#tabs{display:flex;background:#00695c;overflow-x:auto;flex-shrink:0}
+#tabs div{padding:11px 18px;color:#fff;opacity:.7;font-size:13px;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;cursor:pointer}
+#tabs div.on{opacity:1;border-color:#fff}
+main{flex:1;overflow-y:auto;padding:10px 12px}section{display:none;max-width:900px;margin:0 auto}section.on{display:block}
+h3{font-size:15px;margin:6px 0;color:#00796b}p.n{font-size:12px;color:#607d8b;margin:4px 0 8px;line-height:1.5}
+.card{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);padding:12px;margin-bottom:10px}
+.bt{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+button{background:#00796b;color:#fff;border:0;padding:8px 14px;font-size:12px;font-weight:500;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
+button:active{background:#004d40}button.f{background:#cfd8dc;color:#212121}button.d{background:#c62828}
+input[type=text],textarea,select{width:100%;border:0;border-bottom:2px solid #00796b;background:#fafafa;padding:6px 4px;font-size:13px;outline:0;margin:2px 0 8px;font-family:inherit}
+textarea{font-family:monospace;font-size:12px;height:64px;resize:vertical}
+label.k{font-size:11px;color:#607d8b}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:6px 4px;border-bottom:1px solid #eceff1;text-align:left;vertical-align:top;word-break:break-all}
+.ok{color:#2e7d32;font-weight:700}.err{color:#c62828;font-weight:700}.un{color:#9e9e9e}
+#chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.g{width:100%;font-size:11px;color:#607d8b;margin-top:6px}
+.chip{background:#e0f2f1;color:#00695c;padding:5px 10px;border-radius:14px;font-size:12px;cursor:pointer}.chip.d{background:#ffcdd2;color:#b71c1c}
+pre{font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;user-select:text}
+#rout{background:#263238;color:#cfd8dc;padding:8px;min-height:40px;max-height:140px;overflow:auto;margin-top:6px}
+#logw{height:128px;background:#263238;color:#cfd8dc;flex-shrink:0;display:flex;flex-direction:column}
+#logh{display:flex;gap:8px;align-items:center;padding:3px 10px;background:#37474f;font-size:11px}#logh b{flex:1}#logh button{padding:3px 8px;background:#546e7a}
+#log{flex:1;overflow:auto;padding:4px 10px}.l{font-size:11px;margin-bottom:3px}.l b{font-weight:500}.l.ok b{color:#80cbc4}.l.err b{color:#ef9a9a}.l.ev b{color:#ffe082}.l.call b{color:#90caf9}.l pre{color:#b0bec5;margin:1px 0 0 12px;max-height:90px;overflow:hidden}
+img.pv{max-width:140px;max-height:100px;display:block;margin:4px 0}
+</style>
+<script>
+(function(){var P={},H={},n=0;
+addEventListener('message',function(e){var d=e.data;if(!d)return;
+ if(d.type==='htmlos:result'&&P[d.id]){var p=P[d.id];delete P[d.id];d.ok?p[0](d.value):p[1](new Error(d.error))}
+ else if(d.type==='htmlos:event'&&H[d.name])H[d.name].forEach(function(f){f(d.data)})});
+function call(m,a){return new Promise(function(r,j){var id=++n;P[id]=[r,j];parent.postMessage({type:'htmlos:call',id:id,method:m,args:a||[]},'*')})}
+var O=window.HTMLOS=window.HTMLOS||{};O.call=call;O.on=function(k,f){(H[k]=H[k]||[]).push(f)};
+['system','prop','settings','brightness','app','dir','fs','storage','picker','su','notify','permissions'].forEach(function(k){O[k]=new Proxy({},{get:function(_,m){return function(){return call(k+'.'+m,[].slice.call(arguments))}}})});
+})();
+</script></head>
+<body>
+<div id="bar"><span class="t">HTMLOS API Tester</span><span id="badge">trust: …</span></div>
+<div id="tabs"></div>
+<main>
+<section id="s0"><div class="card"><h3>アプリ一般権限</h3>
+<p class="n">API を初めて呼ぶと権限ダイアログが出ます。拒否した権限は設定 → アプリの権限 で変更できます（変更するとこの表も更新されます）。自分の /data/data/&lt;id&gt; は権限なしで使えます。</p>
+<table id="ptab"></table>
+<div class="bt"><button data-do="perm">状態を更新</button><button class="f" data-do="openPerms">設定の権限ページを開く</button><button class="f" data-do="ownDir">自分のデータ領域に書く（権限不要）</button></div></div></section>
+
+<section id="s1"><div class="card"><h3>Root 権限（SuperSU）</h3>
+<p class="n">HTML アプリ、または同一オリジンの iframe アプリが <code>su.request()</code> で root を宣言できます。許可されるとシステムアプリと同じ権限になり、/ 以下にもアクセスできます。</p>
+<pre id="sustat" class="un">…</pre>
+<div class="bt"><button data-do="suReq">su.request()</button><button class="f" data-do="suSt">su.status()</button><button class="f" data-do="openSU">SuperSU を開く</button></div>
+<table id="rtab"></table>
+<div class="bt"><button data-do="rootTests">root テストを実行</button><button class="f" data-do="rootClean">後片付け</button></div>
+<p class="n">root なしで実行すると、/system・/data・書き込み系は ✗（permission denied）になります。</p></div></section>
+
+<section id="s2"><div class="card"><h3>通知 API</h3>
+<label class="k">タイトル</label><input type="text" id="nt" value="API Tester">
+<label class="k">本文</label><input type="text" id="nx" value="HTMLOS 通知のテストです">
+<label class="k">ID（同じ ID は置き換え）</label><input type="text" id="ni" value="t1">
+<div class="bt"><button data-do="nPost">送信 notify.post</button><button class="f" data-do="nDelay">5秒後に送信</button><button class="f" data-do="nBurst">3件まとめて送信</button>
+<button class="f" data-do="nCancel">ID を取消</button><button class="f" data-do="nAll">全取消</button><button class="f" data-do="nList">一覧</button></div>
+<p class="n">コントロールセンター（ステータスバーをタップ）に表示されます。初回は「通知」権限の確認が出ます。通知をタップするとこのアプリが開きます。</p></div></section>
+
+<section id="s3"><div class="card"><h3>API ランナー</h3>
+<p class="n">チップを選ぶとメソッドと引数（JSON 配列）が入ります。編集して実行できます。<code>&lt;self&gt;</code> は自分のアプリ ID、<code>&lt;last&gt;</code> は install したアプリの ID に置き換わります。</p>
+<div id="chips"></div>
+<label class="k">メソッド</label><input type="text" id="m" value="system.info">
+<label class="k">引数 (JSON 配列)</label><textarea id="a">[]</textarea>
+<div class="bt"><button data-do="runner">実行</button><button class="f" data-do="clr">ログを消去</button></div>
+<pre id="rout">結果がここに出ます</pre></div></section>
+
+<section id="s4"><div class="card"><h3>ファイルピッカー / アプリで開く</h3>
+<p class="n">ピッカーで選んだファイルは権限なしで受け取れます。ファイルアプリでテキスト・画像・json をタップして「アプリで開く」→ このアプリを選ぶと、ここに届きます。</p>
+<div class="bt"><button data-do="pickImg">画像を選ぶ</button><button class="f" data-do="pickMany">複数選択（すべて）</button><button class="f" data-do="pickTxt">テキストを選ぶ</button><button class="f" data-do="openDui">ファイルアプリを開く</button></div>
+<div id="fout"></div></div></section>
+
+<section id="s5"><div class="card"><h3>一括テスト</h3>
+<p class="n">安全な API を順番に呼びます。権限ダイアログが出た場合は許可/拒否を選んでください。</p>
+<div class="bt"><button data-do="batch">一括実行</button></div><table id="btab"></table></div></section>
+</main>
+<div id="logw"><div id="logh"><b>ログ</b><button data-do="clr">消去</button></div><div id="log"></div></div>
+
+<script>
+var $=function(s){return document.querySelector(s)},logEl=$('#log'),SELF='?',APPDIR='',LAST='';
+var PL={phone:'電話（デバイス情報の読み取り）',storage_read:'ストレージ読み取り',storage_write:'ストレージ書き込み',notification:'通知'};
+function log(k,t,b){var d=document.createElement('div');d.className='l '+k;var h=document.createElement('b');
+ h.textContent=new Date().toTimeString().slice(0,8)+' '+({call:'→',ok:'✓',err:'✗',ev:'⚡'}[k]||'')+' '+t;d.appendChild(h);
+ if(b){var p=document.createElement('pre');p.textContent=b;d.appendChild(p)}logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight}
+function fmt(v){try{var s=JSON.stringify(v,function(k,x){if(x instanceof Blob)return '[Blob '+x.type+' '+x.size+'B]';if(x instanceof ArrayBuffer)return '[ArrayBuffer '+x.byteLength+'B]';
+ if(typeof x==='string'&&x.length>300)return x.slice(0,200)+'…('+x.length+' chars)';return x},1);return s===undefined?'undefined':s}catch(e){return String(v)}}
+function call(m,a){var t=new Promise(function(_,j){setTimeout(function(){j(new Error('timeout (HTMLOS 内で実行していますか？)'))},120000)});return Promise.race([HTMLOS.call(m,a||[]),t])}
+function run(m,a){log('call',m,JSON.stringify(a||[]));return call(m,a).then(function(v){log('ok',m,fmt(v));return v},function(e){log('err',m,e.message);throw e})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+/* tabs */
+var TN=['権限','Root','通知','API','ファイル','一括'];
+TN.forEach(function(n,i){var d=document.createElement('div');d.textContent=n;d.onclick=function(){tab(i)};$('#tabs').appendChild(d)});
+function tab(i){[].forEach.call($('#tabs').children,function(d,j){d.classList.toggle('on',i===j)});for(var j=0;j<TN.length;j++)$('#s'+j).classList.toggle('on',i===j);if(i===0)perms();if(i===1)suSt()}
+
+/* permissions */
+var TRY={phone:['system.info',[]],storage_read:['dir.list',['/storage/emulated/0']],storage_write:['fs.write',['/storage/emulated/0/Download/htmlos-tester.txt','hello','text/plain']],notification:['notify.post',[{id:'perm',title:'API Tester',text:'通知権限のテスト'}]]};
+function perms(){call('permissions.check').then(function(m){
+ $('#ptab').innerHTML='<tr><th>権限</th><th>状態</th><th></th></tr>'+Object.keys(PL).map(function(p){var s=m[p],c=s==='granted'?'ok':s==='denied'?'err':'un';
+  return '<tr><td>'+PL[p]+'<br><small class="un">'+p+'</small></td><td class="'+c+'">'+(s==='granted'?'許可':s==='denied'?'拒否':'未設定')+'</td><td><button data-do="preq" data-p="'+p+'">要求</button> <button class="f" data-do="ptry" data-p="'+p+'">使ってみる</button></td></tr>'}).join('')}).catch(function(e){$('#ptab').textContent=e.message})}
+/* root / batch tables */
+function seq(list,table){table.innerHTML='<tr><th>API</th><th>引数</th><th></th><th>結果</th></tr>';
+ return list.reduce(function(p,t){return p.then(function(){var m=t[0],a=t[1],tr=document.createElement('tr');table.appendChild(tr);
+  return run(m,a).then(function(v){tr.innerHTML='<td>'+m+'</td><td>'+esc(JSON.stringify(a).slice(0,60))+'</td><td class="ok">✓</td><td>'+esc(fmt(v).replace(/\s+/g,' ').slice(0,80))+'</td>'},
+   function(e){tr.innerHTML='<td>'+m+'</td><td>'+esc(JSON.stringify(a).slice(0,60))+'</td><td class="err">✗</td><td>'+esc(e.message)+'</td>'})})},Promise.resolve())}
+function badge(s){var b=$('#badge');b.textContent='trust: '+(s.granted?'root':'app')+(s.state&&!s.granted?' ('+s.state+')':'');b.className=s.granted?'root':''}
+function suSt(){return call('su.status').then(function(s){$('#sustat').textContent=fmt(s);badge(s)}).catch(function(e){$('#sustat').textContent=e.message})}
+var RB=[['fs.read',['/system/build.prop']],['dir.list',['/']],['dir.list',['/data']],['fs.write',['/system/fonts/tester.txt','test']],['fs.stat',['/system/fonts/tester.txt']],['prop.set',['ro.tester','1']],['prop.get',['ro.tester']],['settings.put',['pointer_location',false]],['brightness.set',[70]],['app.list',[{kind:'user'}]],['system.apiLog',[]],['system.bugReport',[]]];
+
+/* actions */
+var ACT={
+ perm:perms,
+ preq:function(b){run('permissions.request',[[b.dataset.p]]).then(perms,perms)},
+ ptry:function(b){var t=TRY[b.dataset.p];run(t[0],t[1]).then(perms,perms)},
+ openPerms:function(){run('system.openSettings',['perms'])},
+ ownDir:function(){run('fs.write',[APPDIR+'/note.txt','private data '+Date.now()]).then(function(){return run('fs.read',[APPDIR+'/note.txt'])}).catch(function(){})},
+ suReq:function(){run('su.request',[]).then(suSt,suSt)},suSt:suSt,openSU:function(){run('app.launch',['supersu'])},
+ rootTests:function(){seq(RB,$('#rtab')).then(suSt)},
+ rootClean:function(){run('fs.rm',['/system/fonts/tester.txt']).catch(function(){});run('prop.set',['ro.tester','']).catch(function(){})},
+ nPost:function(){run('notify.post',[{id:$('#ni').value||undefined,title:$('#nt').value,text:$('#nx').value}]).catch(function(){})},
+ nDelay:function(){log('call','notify.post (5秒後)');setTimeout(ACT.nPost,5000)},
+ nBurst:function(){[1,2,3].forEach(function(i){run('notify.post',[{id:'b'+i,title:'通知 '+i+'/3',text:'まとめて送信テスト'}]).catch(function(){})})},
+ nCancel:function(){run('notify.cancel',[$('#ni').value]).catch(function(){})},
+ nAll:function(){run('notify.cancelAll',[]).catch(function(){})},nList:function(){run('notify.list',[]).catch(function(){})},
+ runner:function(){var a;try{a=JSON.parse($('#a').value||'[]');if(!Array.isArray(a))throw 0}catch(e){return log('err','引数は JSON 配列で入力してください')}
+  a=JSON.parse(JSON.stringify(a).split('"<self>"').join(JSON.stringify(SELF)).split('"<last>"').join(JSON.stringify(LAST||'none')));
+  var m=$('#m').value.trim(),dn=$('#chips .chip.d.sel');if(/^system\.(reboot|factoryReset)$/.test(m)&&!confirm(m+' を実行します。よろしいですか？'))return;
+  run(m,a).then(function(v){$('#rout').textContent=fmt(v);if(m==='app.install')LAST=v},function(e){$('#rout').textContent='ERR '+e.message})},
+ clr:function(){logEl.innerHTML=''},
+ pickImg:function(){pick({accept:['image/*']})},pickMany:function(){pick({multiple:true})},pickTxt:function(){pick({accept:['text/*','.json','.md','.txt']})},
+ openDui:function(){run('app.launch',['dui'])},
+ batch:function(){var P='/storage/emulated/0/Download/htmlos-tester.txt',P2='/storage/emulated/0/Download/htmlos-tester-copy.txt',P3='/storage/emulated/0/Download/htmlos-tester-moved.txt';
+  seq([['permissions.check',[]],['system.info',[]],['prop.getAll',[]],['settings.get',['wifi_on']],['settings.getAll',[]],['brightness.get',[]],['app.list',[]],['app.running',[]],['dir.roots',[]],['storage.info',[]],
+   ['fs.write',[APPDIR+'/batch.txt','own dir']],['fs.read',[APPDIR+'/batch.txt']],['dir.list',['/storage/emulated/0']],['fs.write',[P,'hello','text/plain']],['fs.read',[P]],['fs.append',[P,'\nline2']],['fs.stat',[P]],['fs.cp',[P,P2]],['fs.mv',[P2,P3]],['fs.rm',[P]],['fs.rm',[P3]],
+   ['notify.post',[{id:'bat',title:'API Tester',text:'一括テスト'}]],['notify.list',[]],['notify.cancel',['bat']],['su.status',[]],
+   ['prop.set',['ro.tester','1']],['settings.put',['stay_awake',false]],['brightness.set',[60]],['dir.list',['/system']]],$('#btab'))}
+};
+document.addEventListener('click',function(e){var b=e.target.closest('[data-do]');if(b&&ACT[b.dataset.do])ACT[b.dataset.do](b)});
+
+/* runner catalog */
+var P0='/storage/emulated/0/Download/htmlos-tester.txt';
+var CAT={
+ system:[['info',[]],['toast',['Hello HTMLOS']],['vibrate',[100]],['sdk',[]],['openSettings',['about']],['apiLog',[]],['bugReport',[]],['takePendingNav',[]],['reboot',[],1],['factoryReset',[],1]],
+ prop:[['get',['ro.product.model']],['getAll',[]],['set',['ro.tester','1']]],
+ settings:[['get',['wifi_on']],['getAll',[]],['put',['show_touches',true]],['put',['font_scale',1.15]]],
+ brightness:[['get',[]],['set',[60]]],
+ app:[['list',[]],['list',[{kind:'user'}]],['info',['setting.html']],['running',[]],['launch',['dui']],['install',[{name:'Sample App',html:'<h2 style="font-family:sans-serif">Hello from app.install</h2>',sym:'apps',color:'#00796b'}]],['setEnabled',['<last>',false]],['setEnabled',['<last>',true]],['forceStop',['<last>']],['clearData',['<last>']],['uninstall',['<last>'],1]],
+ dir:[['roots',[]],['list',['/storage/emulated/0']],['list',['/']],['mkdir',['/storage/emulated/0/HTMLOSTest']],['exists',['/storage/emulated/0']]],
+ fs:[['exists',[P0]],['stat',[P0]],['read',[P0,'text']],['read',[P0,'dataURL']],['write',[P0,'hello','text/plain']],['append',[P0,'\nmore']],['cp',[P0,P0+'.bak']],['mv',[P0+'.bak',P0+'.moved']],['rm',[P0+'.moved']],['rm',[P0]]],
+ storage:[['info',[]]],
+ picker:[['pick',[{accept:['image/*'],multiple:false,title:'Pick'}]]],
+ permissions:[['list',[]],['check',[]],['request',[['storage_read','notification']]],['getAll',[]],['set',['<self>','storage_read','granted']],['reset',['<self>']]],
+ su:[['status',[]],['request',[]]],
+ notify:[['post',[{id:'c1',title:'Hello',text:'from the runner'}]],['cancel',['c1']],['cancelAll',[]],['list',[]]]
+};
+Object.keys(CAT).forEach(function(ns){var g=document.createElement('div');g.className='g';g.textContent=ns;$('#chips').appendChild(g);
+ CAT[ns].forEach(function(c){var d=document.createElement('span');d.className='chip'+(c[2]?' d':'');d.textContent=c[0]+(c[1].length&&typeof c[1][0]!=='object'?'('+JSON.stringify(c[1]).slice(1,-1).slice(0,18)+')':'');
+  d.onclick=function(){$('#m').value=ns+'.'+c[0];$('#a').value=JSON.stringify(c[1])};$('#chips').appendChild(d)})});
+
+/* files */
+function showFile(f){var d=document.createElement('div');d.className='card';var h='<b>'+esc(f.name)+'</b><br><small class="un">'+esc(f.path||'')+' · '+esc(f.mime)+' · '+f.size+' B</small>';d.innerHTML=h;
+ if(f.blob&&f.mime.indexOf('image/')===0){var i=document.createElement('img');i.className='pv';i.src=URL.createObjectURL(f.blob);d.appendChild(i)}
+ else if(f.blob&&(f.mime.indexOf('text/')===0||/json/.test(f.mime))){f.blob.text().then(function(t){var p=document.createElement('pre');p.textContent=t.slice(0,400);d.appendChild(p)})}
+ $('#fout').prepend(d)}
+function pick(o){o.title='ファイルを選択';run('picker.pick',[o]).then(function(r){if(r)r.forEach(showFile)}).catch(function(){})}
+addEventListener('message',function(e){var d=e.data;if(d&&d.type==='htmlos:open'&&d.files){tab(4);log('ev','htmlos:open',d.files.map(function(f){return f.name}).join(', '));d.files.forEach(showFile)}});
+
+/* events + init */
+['appsChanged','settingChanged','propChanged','navigate','permissionChanged','suChanged'].forEach(function(n){HTMLOS.on(n,function(d){log('ev',n,fmt(d));if(n==='permissionChanged')perms();if(n==='suChanged')suSt()})});
+call('dir.roots').then(function(r){APPDIR=r.appData;SELF=APPDIR.split('/').pop();log('ok','自分のアプリ ID: '+SELF,APPDIR)}).catch(function(e){log('err','dir.roots',e.message)});
+tab(0);suSt();
+parent.postMessage({type:'htmlos:ready'},'*');
+</script></body></html>
